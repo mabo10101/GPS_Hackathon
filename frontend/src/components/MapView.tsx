@@ -15,6 +15,8 @@ export interface MapViewHandle {
 
 export interface MapViewProps {
   className?: string;
+  /** Called after initialization, and with null when the map is cleaned up. */
+  onMapReady?: (map: Map | null) => void;
 }
 
 const UCF_CENTER: [number, number] = [-81.2001, 28.6024];
@@ -22,7 +24,7 @@ const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 /** The parent must provide a height. Native mouse and touch controls are enabled. */
 const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
-  { className },
+  { className, onMapReady },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,11 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       map.remove();
     };
   }, []);
+
+  useEffect(() => {
+    onMapReady?.(mapRef.current);
+    return () => onMapReady?.(null);
+  }, [onMapReady]);
 
   return (
     <div
