@@ -2,8 +2,10 @@
 # Indoor Navigation Demo
 # Route: Engineering 1 Business Entrance -> Classroom 118
 
+from data.indoor_building import building, environment
 
-from data.building import building
+# Optionally expose environment info (e.g., 'indoors') if needed
+_ENVIRONMENT = environment
 
 
 def show_location(location_id):

@@ -30,14 +30,18 @@ a name in the list centers the map on that point.
 To enable "Route to nearest":
 
 1. Create a Geoapify API key at https://myprojects.geoapify.com/.
-2. Copy `.env.example` to `.env.local` and set `VITE_GEOAPIFY_API_KEY`.
-3. Restart Vite, select a populated category, and click "Route to nearest".
+2. Copy `../backend/.env.example` to `../backend/.env.local` and set `GEOAPIFY_API_KEY`.
+3. Run `npm.cmd run dev` from `../backend` in a second terminal. Restart Vite,
+   select a populated category, and click "Route to nearest".
 4. Allow location access. Deployed apps need HTTPS; localhost works for development.
    Opening a phone's browser at a plain HTTP LAN address does not enable location.
 
-`.env.local` is ignored by Git. Vite embeds `VITE_` variables in the public
-client bundle; restrict the key's allowed origins in your Geoapify project.
-Use a server proxy later if the key must stay private. Never commit a live key.
+The backend's `.env.local` is ignored by Git. API keys stay on the backend;
+remove any old `VITE_GEOAPIFY_API_KEY` from frontend environment files. The
+frontend calls `/api/routes`; Vite proxies `/api` to `http://127.0.0.1:3001`.
+The panel checks backend configuration on load and every 15 seconds. For
+production, serve the frontend and `/api` through the same HTTPS origin.
+See `../backend/README.md` for server deployment and key restrictions.
 
 The app compares actual walking routes for all matching POIs, selecting the
 shortest returned distance. Each candidate uses one API request. Requests are
@@ -56,6 +60,14 @@ uses one API request. Stop navigation or change category/destination to stop GPS
 tracking and cancel pending requests. Arrival is reported within 15 meters when
 location accuracy is 25 meters or better. Indoor POIs route to their entrance;
 floor navigation and voice guidance are not included.
+
+The sprite guide displays one walking instruction at a time in a chat bubble.
+Choose any of the three existing pixel characters. GPS advances to the next
+instruction within 20 meters of its route checkpoint when accuracy is 25 meters
+or better. Poor fixes pause advancement; "I reached the next turn" offers manual
+advancement. Rerouting resets guidance to the updated route and arrival shows a
+completion message. Instructions and checkpoints come from Geoapify route steps;
+no AI API is used. Test outdoors on a phone to validate real GPS behavior.
 
 Click "Enable compass" on a phone to show a blue direction cone at your GPS
 location. Allow motion/orientation permission if prompted, then start navigation.

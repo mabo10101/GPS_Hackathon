@@ -18,7 +18,7 @@ export const UCF_RETRO_COLORS = {
   buildingOutline: '#655a36',
   road: '#454545',
   roadOutline: '#151515',
-  path: '#8c783e',
+  path: '#3f3720',
   gold: '#ffc904',
   boundary: '#736445',
 } as const;
