@@ -10,10 +10,21 @@ import { campusPois, validatePois, type CampusPoi, type PoiCategory } from './da
 import { distanceMeters, getUserLocation, watchUserLocation, type UserLocation } from './services/location';
 import { getWalkingRoute, findNearestWalkingRoute, type NearestRoute } from './services/routing';
 
-const API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY?.trim() ?? '';
+
 
 export default function App() {
   const compass = useCompass();
+  const [hasRouting, setHasRouting] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    const check = () => { void fetch('/api/health', { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (!controller.signal.aborted) setHasRouting(data?.routingConfigured === true); })
+      .catch(() => { if (!controller.signal.aborted) setHasRouting(false); }); };
+    check();
+    const timer = setInterval(check, 15000);
+    return () => { controller.abort(); clearInterval(timer); };
+  }, []);
   const [map, setMap] = useState<Map | null>(null);
   const [category, setCategory] = useState<PoiCategory>('vending');
   const [location, setLocation] = useState<UserLocation | null>(null);
@@ -24,6 +35,7 @@ export default function App() {
   const [destinationId, setDestinationId] = useState('');
   const [navigating, setNavigating] = useState(false);
   const [indoorOpen, setIndoorOpen] = useState(false);
+  const [arrived, setArrived] = useState(false);
   const navigation = useRef<AbortController | null>(null);
   const pendingRequest = useRef<AbortController | null>(null);
   const { valid, errors } = useMemo(() => validatePois(campusPois), []);
@@ -32,6 +44,7 @@ export default function App() {
   useEffect(() => () => { pendingRequest.current?.abort(); navigation.current?.abort(); }, []);
 
   const clearRoute = () => {
+    setArrived(false);
     navigation.current?.abort();
     navigation.current = null;
     setNavigating(false);
@@ -57,6 +70,7 @@ export default function App() {
       if (current.accuracy <= 25 && distanceMeters(current.coordinates, end) <= 15) {
         session.abort();
         setNavigating(false);
+        setArrived(true);
         setStatus(destination.entranceCoordinates ? 'You have reached the entrance. Continue inside to your destination.' : 'You have reached your destination.');
         return;
       }
@@ -65,7 +79,7 @@ export default function App() {
       updating = true;
       lastRequest = Date.now();
       setStatus('Updating your walking route…');
-      void getWalkingRoute(current.coordinates, end, API_KEY, session.signal).then((updated) => {
+      void getWalkingRoute(current.coordinates, end, session.signal).then((updated) => {
         if (session.signal.aborted) return;
         if (!updated) throw new Error('No walking route from your current location.');
         origin = current.coordinates;
@@ -78,7 +92,7 @@ export default function App() {
   };
 
   const routeNearest = async (destination?: CampusPoi) => {
-    if (!API_KEY || filteredPois.length === 0 || pendingRequest.current) return;
+    if (!hasRouting || filteredPois.length === 0 || pendingRequest.current) return;
     clearRoute();
     const controller = new AbortController();
     pendingRequest.current = controller;
@@ -91,9 +105,9 @@ export default function App() {
       if (controller.signal.aborted) return;
       setLocation(userLocation);
       setStatus(`Comparing walking routes: 0 of ${filteredPois.length}…`);
-      const selected = destination ? await getWalkingRoute(userLocation.coordinates, destination.entranceCoordinates ?? destination.coordinates, API_KEY, controller.signal) : null;
+      const selected = destination ? await getWalkingRoute(userLocation.coordinates, destination.entranceCoordinates ?? destination.coordinates, controller.signal) : null;
       if (destination && !selected) throw new Error('No walking route found to this destination.');
-      const nearest: NearestRoute = destination && selected ? { ...selected, poi: destination, unreachableCount: 0 } : await findNearestWalkingRoute(userLocation.coordinates, filteredPois, API_KEY, controller.signal,
+      const nearest: NearestRoute = destination && selected ? { ...selected, poi: destination, unreachableCount: 0 } : await findNearestWalkingRoute(userLocation.coordinates, filteredPois, controller.signal,
         (completed, total) => {
           if (!controller.signal.aborted) setStatus(`Comparing walking routes: ${completed} of ${total}…`);
         });
@@ -130,6 +144,7 @@ export default function App() {
         onDestinationChange={(id) => { clearRoute(); setDestinationId(id); }}
         onNavigate={() => { const destination = valid.find((poi) => poi.id === destinationId); if (destination) void routeNearest(destination); }}
         navigating={navigating}
+        arrived={arrived}
         pois={filteredPois}
         onFocusPoi={(poi) => {
           if (poi.id !== destinationId) { clearRoute(); setDestinationId(poi.id); }
@@ -142,7 +157,7 @@ export default function App() {
         error={error}
         route={route}
         location={location}
-        hasApiKey={Boolean(API_KEY)}
+        hasRouting={hasRouting}
         invalidCount={errors.length}
         onOpenIndoor={() => setIndoorOpen(true)}
       />

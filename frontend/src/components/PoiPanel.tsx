@@ -2,6 +2,7 @@ import { POI_CATEGORIES, type CampusPoi, type PoiCategory } from '../data/pois';
 import type { NearestRoute } from '../services/routing';
 import type { UserLocation } from '../services/location';
 import './PoiPanel.css';
+import SpriteGuide from './SpriteGuide';
 
 interface PoiPanelProps {
   compassEnabled: boolean;
@@ -12,6 +13,7 @@ interface PoiPanelProps {
   onDestinationChange: (id: string) => void;
   onNavigate: () => void;
   navigating: boolean;
+  arrived: boolean;
   onCategoryChange: (category: PoiCategory) => void;
   pois: CampusPoi[];
   onFocusPoi: (poi: CampusPoi) => void;
@@ -22,7 +24,7 @@ interface PoiPanelProps {
   error: string | null;
   route: NearestRoute | null;
   location: UserLocation | null;
-  hasApiKey: boolean;
+  hasRouting: boolean;
   invalidCount: number;
   onOpenIndoor: () => void;
 }
@@ -47,14 +49,14 @@ export default function PoiPanel(props: PoiPanelProps) {
         <option value="">Choose a destination</option>
         {props.pois.map((poi) => <option key={poi.id} value={poi.id}>{poi.name}</option>)}
       </select>
-      <button className="route-button" onClick={props.onNavigate} aria-describedby={!hasDestination ? 'destination-hint' : undefined} disabled={props.busy || !hasDestination || !props.hasApiKey}>Navigate with GPS</button>
+      <button className="route-button" onClick={props.onNavigate} aria-describedby={!hasDestination ? 'destination-hint' : undefined} disabled={props.busy || !hasDestination || !props.hasRouting}>Navigate with GPS</button>
       {!hasDestination && props.pois.length > 0 && <p id="destination-hint" className="setup-note">Choose a destination above or click a place in the list to enable GPS navigation.</p>}
       {props.pois.length === 0 && <p>No points in this category yet. Add your campus locations to get started.</p>}
-      <button className="route-button" onClick={props.onRouteNearest} disabled={props.busy || props.pois.length === 0 || !props.hasApiKey}>
+      <button className="route-button" onClick={props.onRouteNearest} disabled={props.busy || props.pois.length === 0 || !props.hasRouting}>
         {props.busy ? 'Finding route…' : 'Route to nearest'}
       </button>
       {(props.busy || props.route) && <button className="secondary-button" onClick={props.onClearRoute}>{props.busy ? 'Cancel' : props.navigating ? 'Stop navigation' : 'Clear route'}</button>}
-      {!props.hasApiKey && <p className="setup-note">Walking routes are not configured yet.</p>}
+      {!props.hasRouting && <p className="setup-note">Walking routes unavailable. Start the backend and configure its Geoapify key.</p>}
       {props.invalidCount > 0 && <p role="alert">{props.invalidCount} invalid POI records were excluded. Check your data.</p>}
       <p className="route-status" role="status" aria-live="polite">{props.status}</p>
       {props.error && <p className="route-error" role="alert">{props.error}</p>}
@@ -67,10 +69,7 @@ export default function PoiPanel(props: PoiPanelProps) {
         {props.route.poi.indoorRoute && <button className="route-button" onClick={props.onOpenIndoor}>Continue inside</button>}
         {props.location && <p className="setup-note">Location accuracy: approximately {Math.round(props.location.accuracy)} m.</p>}
         {props.route.unreachableCount > 0 && <p>{props.route.unreachableCount} points had no walking route. Showing the nearest reachable result.</p>}
-        {props.route.instructions.length > 0 && <details>
-          <summary>Walking directions</summary>
-          <ol>{props.route.instructions.map((instruction, index) => <li key={index}>{instruction}</li>)}</ol>
-        </details>}
+        <SpriteGuide route={props.route} location={props.location} navigating={props.navigating} arrived={props.arrived} />
       </div>}
       {props.pois.length > 0 && <ul className="poi-list" aria-label={categoryName}>
         {props.pois.map((poi) => <li key={poi.id}>

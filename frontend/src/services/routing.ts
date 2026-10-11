@@ -9,6 +9,12 @@ export interface RouteProperties {
 export interface WalkingRoute {
   feature: Feature<LineString | MultiLineString, RouteProperties>;
   instructions: string[];
+  steps: NavigationStep[];
+}
+
+export interface NavigationStep {
+  instruction: string;
+  coordinates: Coordinates | null;
 }
 
 export interface NearestRoute extends WalkingRoute {
@@ -38,12 +44,17 @@ export function parseWalkingRoute(data: unknown): WalkingRoute | null {
   }
 
   const instructions: string[] = [];
+  const steps: NavigationStep[] = [];
   if (Array.isArray(properties.legs)) {
-    for (const leg of properties.legs) {
+    for (const [legIndex, leg] of properties.legs.entries()) {
       if (!isRecord(leg) || !Array.isArray(leg.steps)) continue;
       for (const step of leg.steps) {
         if (isRecord(step) && isRecord(step.instruction) && typeof step.instruction.text === 'string') {
           instructions.push(step.instruction.text);
+          const line = lines[legIndex];
+          const point = Array.isArray(line) && typeof step.from_index === 'number' && Number.isInteger(step.from_index)
+            ? line[step.from_index] : null;
+          steps.push({ instruction: step.instruction.text, coordinates: isValidCoordinates(point) ? point : null });
         }
       }
     }
@@ -55,37 +66,28 @@ export function parseWalkingRoute(data: unknown): WalkingRoute | null {
       properties: { distance: properties.distance, time: properties.time },
     },
     instructions,
+    steps,
   };
 }
 
 export async function getWalkingRoute(
   start: Coordinates,
   end: Coordinates,
-  apiKey: string,
   signal: AbortSignal,
 ): Promise<WalkingRoute | null> {
-  const params = new URLSearchParams({
-    waypoints: [start, end].map(([lng, lat]) => `${lat},${lng}`).join('|'),
-    mode: 'walk',
-    type: 'short',
-    units: 'metric',
-    lang: 'en',
-    format: 'geojson',
-    apiKey,
-  });
   let response: Response;
   try {
-    response = await fetch(`https://api.geoapify.com/v1/routing?${params}`, { signal });
+    response = await fetch('/api/routes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ start, end }), signal,
+    });
   } catch (error) {
     if (signal.aborted) throw new DOMException('Cancelled', 'AbortError');
     throw new Error('Could not reach the routing service. Check your connection and try again.', { cause: error });
   }
   if (!response.ok) {
-    if (response.status === 401 || response.status === 403) throw new Error('Geoapify rejected the API key. Check the key and its allowed origins.');
-    if (response.status === 429) throw new Error('Geoapify request limit reached. Wait before trying again.');
     const data: unknown = await response.json().catch(() => null);
     const message = isRecord(data) && typeof data.message === 'string' ? data.message : '';
-    if ((response.status === 400 || response.status === 404) && /no route|could not find|failed to find|no suitable|no path/i.test(message)) return null;
+    if (message) throw new Error(message);
     throw new Error(`Walking route request failed (${response.status}). Try again later.`);
   }
   return parseWalkingRoute(await response.json());
@@ -110,7 +112,6 @@ function pause(signal: AbortSignal): Promise<void> {
 export async function findNearestWalkingRoute(
   start: Coordinates,
   pois: CampusPoi[],
-  apiKey: string,
   signal: AbortSignal,
   onProgress: (completed: number, total: number) => void,
 ): Promise<NearestRoute> {
@@ -119,7 +120,7 @@ export async function findNearestWalkingRoute(
   for (let index = 0; index < pois.length; index++) {
     await pause(signal);
     const poi = pois[index];
-    const route = await getWalkingRoute(start, poi.entranceCoordinates ?? poi.coordinates, apiKey, signal);
+    const route = await getWalkingRoute(start, poi.entranceCoordinates ?? poi.coordinates, signal);
     if (!route) unreachableCount++;
     else if (!best || route.feature.properties.distance < best.feature.properties.distance) best = { ...route, poi };
     onProgress(index + 1, pois.length);

@@ -1,0 +1,8 @@
+.sprite-guide { margin-top: 14px; }
+.guide-chat { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.guide-avatar { position: relative; width: 80px; height: 90px; flex: 0 0 80px; overflow: hidden; }
+.guide-avatar img { position: absolute; width: 320px; height: 320px; max-width: none; left: -120px; top: -86px; image-rendering: pixelated; }
+.guide-bubble { position: relative; flex: 1; min-width: 0; padding: 12px; background: #292519; border: 2px solid #ffc904; color: #fff4cf; }
+.guide-bubble::before { content: ''; position: absolute; left: -8px; top: 28px; width: 10px; height: 10px; background: #292519; border-left: 2px solid #ffc904; border-bottom: 2px solid #ffc904; transform: rotate(45deg); }
+.guide-bubble strong { color: #ffc904; }
+.guide-bubble p { margin-bottom: 0; }

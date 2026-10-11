@@ -16,6 +16,9 @@ function moduleUrl(path, imports = {}) {
 const dataUrl = moduleUrl('../src/data/pois.ts');
 const { validatePois } = await import(dataUrl);
 const { watchUserLocation, distanceMeters } = await import(moduleUrl('../src/services/location.ts'));
+const { advanceGuidance } = await import(moduleUrl('../src/services/guidance.ts', {
+  './location': moduleUrl('../src/services/location.ts'),
+}));
 const reactStub = 'data:text/javascript,export const useEffect=()=>{},useRef=()=>{},useState=()=>{};';
 const { compassHeading } = await import(moduleUrl('../src/services/compass.ts', { react: reactStub }));
 const { parseWalkingRoute, getWalkingRoute, findNearestWalkingRoute } = await import(
@@ -54,13 +57,13 @@ test('route parser handles geometry and instructions, rejects invalid routes', (
   assert.throws(() => parseWalkingRoute(invalidGeometry), /invalid route/);
 });
 
-test('walking request converts longitude/latitude to Geoapify latitude/longitude', async () => {
+test('walking request sends coordinates to backend without an API key', async () => {
   const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json(responseData(100)));
-  await getWalkingRoute(start, [-81.201, 28.601], 'test-key', new AbortController().signal);
-  const url = new URL(fetchMock.mock.calls[0].arguments[0]);
-  assert.equal(url.searchParams.get('waypoints'), '28.6,-81.2|28.601,-81.201');
-  assert.equal(url.searchParams.get('mode'), 'walk');
-  assert.equal(url.searchParams.get('type'), 'short');
+  await getWalkingRoute(start, [-81.201, 28.601], new AbortController().signal);
+  assert.equal(fetchMock.mock.calls[0].arguments[0], '/api/routes');
+  const options = fetchMock.mock.calls[0].arguments[1];
+  assert.equal(options.method, 'POST');
+  assert.deepEqual(JSON.parse(options.body), { start, end: [-81.201, 28.601] });
 });
 
 test('nearest uses walking distance and entrance coordinates, skipping unreachable routes', async () => {
@@ -72,26 +75,26 @@ test('nearest uses walking distance and entrance coordinates, skipping unreachab
   const replies = [responseData(800), responseData(200), { features: [] }];
   const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json(replies.shift()));
   const progress = [];
-  const result = await findNearestWalkingRoute(start, candidates, 'test-key', new AbortController().signal,
+  const result = await findNearestWalkingRoute(start, candidates, new AbortController().signal,
     (done, total) => progress.push([done, total]));
   assert.equal(result.poi.id, 'shorter-walk');
   assert.equal(result.unreachableCount, 1);
-  assert.equal(new URL(fetchMock.mock.calls[1].arguments[0]).searchParams.get('waypoints'), '28.6,-81.2|28.603,-81.203');
+  assert.deepEqual(JSON.parse(fetchMock.mock.calls[1].arguments[1].body).end, [-81.203, 28.603]);
   assert.deepEqual(progress, [[1, 3], [2, 3], [3, 3]]);
 });
 
 test('quota failures stop comparison instead of returning an incomplete nearest result', async () => {
   let count = 0;
   mock.method(globalThis, 'fetch', async () => ++count === 1
-    ? Response.json(responseData(100)) : Response.json({}, { status: 429 }));
-  await assert.rejects(findNearestWalkingRoute(start, [poi('a', start), poi('b', start)], 'test-key',
+    ? Response.json(responseData(100)) : Response.json({ message: 'Routing request limit reached.' }, { status: 429 }));
+  await assert.rejects(findNearestWalkingRoute(start, [poi('a', start), poi('b', start)],
     new AbortController().signal, () => {}), /limit reached/);
 });
 
 test('cancellation stops pending route comparisons before making an API call', async () => {
   const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json(responseData(100)));
   const controller = new AbortController();
-  const pending = findNearestWalkingRoute(start, [poi('a', start)], 'test-key', controller.signal, () => {});
+  const pending = findNearestWalkingRoute(start, [poi('a', start)], controller.signal, () => {});
   controller.abort();
   await assert.rejects(pending, { name: 'AbortError' });
   assert.equal(fetchMock.mock.calls.length, 0);
@@ -99,7 +102,7 @@ test('cancellation stops pending route comparisons before making an API call', a
 
 test('missing reachable routes report failure rather than drawing a straight line', async () => {
   mock.method(globalThis, 'fetch', async () => Response.json({ features: [] }));
-  await assert.rejects(findNearestWalkingRoute(start, [poi('a', start)], 'test-key',
+  await assert.rejects(findNearestWalkingRoute(start, [poi('a', start)],
     new AbortController().signal, () => {}), /No walking routes/);
 });
 
@@ -144,4 +147,37 @@ test('compass uses north-referenced readings and adjusts for screen orientation'
   assert.equal(compassHeading({ webkitCompassHeading: 350 }, 90), 80);
   assert.equal(compassHeading({ webkitCompassHeading: 90, webkitCompassAccuracy: -1 }), null);
   assert.equal(compassHeading({ webkitCompassHeading: Number.NaN }), null);
+});
+
+test('maneuver coordinates use indexes within each route leg', () => {
+  const data = responseData(200);
+  const secondLeg = [[-81.201, 28.601], [-81.202, 28.602]];
+  data.features[0].geometry.coordinates.push(secondLeg);
+  data.features[0].properties.legs[0].steps[0].from_index = 1;
+  data.features[0].properties.legs.push({ steps: [{ from_index: 1, instruction: { text: 'Turn left.' } }] });
+  assert.deepEqual(parseWalkingRoute(data).steps, [
+    { instruction: 'Continue on the path.', coordinates: [-81.201, 28.601] },
+    { instruction: 'Turn left.', coordinates: secondLeg[1] },
+  ]);
+});
+
+test('guide advances only at the next checkpoint with an accurate fix', () => {
+  const steps = [
+    { instruction: 'Start walking.', coordinates: start },
+    { instruction: 'Turn left.', coordinates: [-81.201, 28.601] },
+    { instruction: 'Arrive.', coordinates: [-81.202, 28.602] },
+  ];
+  assert.equal(advanceGuidance(steps, 0, { coordinates: start, accuracy: 5 }), 0);
+  assert.equal(advanceGuidance(steps, 0, { coordinates: steps[1].coordinates, accuracy: 5 }), 1);
+  assert.equal(advanceGuidance(steps, 0, { coordinates: steps[1].coordinates, accuracy: 80 }), 0);
+  assert.equal(advanceGuidance(steps, 0, { coordinates: steps[2].coordinates, accuracy: 5 }), 0);
+  assert.equal(advanceGuidance(steps, 2, { coordinates: steps[2].coordinates, accuracy: 5 }), 2);
+});
+
+test('missing or invalid checkpoint indexes allow manual directions without invented coordinates', () => {
+  const data = responseData(100);
+  data.features[0].properties.legs[0].steps[0].from_index = -1;
+  assert.equal(parseWalkingRoute(data).steps[0].coordinates, null);
+  const steps = [{ instruction: 'Start', coordinates: start }, { instruction: 'Turn', coordinates: null }];
+  assert.equal(advanceGuidance(steps, 0, { coordinates: start, accuracy: 5 }), 0);
 });
