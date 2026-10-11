@@ -1,8 +1,9 @@
 # Add your campus points
 
-Edit `pois.ts` and add records to `campusPois`. The list includes five clearly
-labeled demo points around UCF: three vending machines, one bus stop and one
-classroom. These are approximate test coordinates, not verified real POIs or
+Edit `pois.ts` and add records to `campusPois`. The list includes clearly
+labeled demo points around UCF for vending machines, bus stops, classrooms,
+printers and libraries, plus an approximate ENG 118 walkthrough destination.
+These are approximate test coordinates, not verified real POIs or
 entrances. Replace them with your own locations before publishing. Save the
 file while Vite runs to update it.
 
@@ -27,7 +28,7 @@ export const campusPois: CampusPoi[] = [
 ```
 
 Coordinates are always `[longitude, latitude]`. Categories are `vending`,
-`bus-stop`, and `classroom`. Add more entries to `POI_CATEGORIES` to extend them.
+`bus-stop`, `classroom`, `printer`, and `library`. Add more entries to `POI_CATEGORIES` to extend them.
 IDs must be unique. Invalid coordinates and duplicate records are excluded and
 reported in the app.
 

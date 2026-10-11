@@ -5,6 +5,8 @@ export const POI_CATEGORIES = [
   { id: 'vending', label: 'Vending machines' },
   { id: 'bus-stop', label: 'Bus stops' },
   { id: 'classroom', label: 'Classrooms' },
+  { id: 'printer', label: 'Printers' },
+  { id: 'library', label: 'Libraries' },
 ] as const;
 
 export type PoiCategory = typeof POI_CATEGORIES[number]['id'];
@@ -26,6 +28,48 @@ export interface CampusPoi {
 // DEMO DATA: approximate UCF-area coordinates, not verified real POIs or entrances.
 // Replace these records with your surveyed campus locations before publishing.
 export const campusPois: CampusPoi[] = [
+  {
+    id: 'demo-printer-central',
+    name: 'Demo printer · Central',
+    category: 'printer',
+    coordinates: [-81.2008, 28.6018],
+    description: 'Unverified test printer location near the campus center.',
+  },
+  {
+    id: 'demo-printer-east',
+    name: 'Demo printer · East',
+    category: 'printer',
+    coordinates: [-81.1978, 28.6021],
+    description: 'Unverified test printer location east of the campus center.',
+  },
+  {
+    id: 'demo-printer-north',
+    name: 'Demo printer · North',
+    category: 'printer',
+    coordinates: [-81.2012, 28.6040],
+    description: 'Unverified test printer location north of the campus center.',
+  },
+  {
+    id: 'demo-library-south',
+    name: 'Demo library · South',
+    category: 'library',
+    coordinates: [-81.2010, 28.6008],
+    description: 'Unverified test library location. Not an actual campus library listing.',
+  },
+  {
+    id: 'demo-library-west',
+    name: 'Demo library · West',
+    category: 'library',
+    coordinates: [-81.2035, 28.6028],
+    description: 'Unverified test library location west of the campus center.',
+  },
+  {
+    id: 'demo-library-northeast',
+    name: 'Demo library · Northeast',
+    category: 'library',
+    coordinates: [-81.1985, 28.6040],
+    description: 'Unverified test library location northeast of the campus center.',
+  },
   {
     id: 'demo-vending-central',
     name: 'Demo vending machine · Central',

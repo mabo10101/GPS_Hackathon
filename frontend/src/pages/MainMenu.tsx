@@ -1,4 +1,5 @@
 import MapView from '../components/MapView';
+import BrandLogo from '../components/BrandLogo';
 
 export default function MainMenu({ onMap, onIndoor }: { onMap: () => void; onIndoor: () => void }) {
   return <main className="app main-menu" aria-label="Campus navigation main menu">
@@ -6,7 +7,7 @@ export default function MainMenu({ onMap, onIndoor }: { onMap: () => void; onInd
     <div className="menu-shade" />
     <section className="menu-card" aria-labelledby="menu-title">
       <p className="menu-eyebrow">UCF CAMPUS · YOUR NEXT ADVENTURE</p>
-      <h1 id="menu-title">Go Forth<span>Find your way.</span></h1>
+      <div className="menu-brand"><BrandLogo /><h1 id="menu-title">Go Forth<span>Find your way.</span></h1></div>
       <p className="menu-intro">Across campus or down the hallway—choose where your journey starts.</p>
       <nav className="menu-options" aria-label="Navigation modes">
         <button onClick={onMap} className="menu-option">

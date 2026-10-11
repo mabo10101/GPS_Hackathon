@@ -57,6 +57,15 @@
 .panel-details[open] summary { margin-bottom: 12px; }
 .route-result { margin-top: 0; padding-top: 0; border-top: 0; }
 .route-summary { color: #ffc904; font-size: 19px; }
+.poi-panel { border-radius: 16px; animation: panel-enter .35s ease-out; }
+.poi-panel button, .poi-panel select { border-radius: 9px; transition: background .18s ease, box-shadow .18s ease, transform .18s ease; }
+.poi-panel button:not(:disabled):hover { transform: translateY(-2px); }
+.poi-panel button:not(:disabled):active { transform: translateY(1px); }
+.route-button:not(:disabled):hover { background: #ffdc54; box-shadow: 0 0 18px #ffc90430; }
+.poi-list button { margin-bottom: 6px; padding: 12px 10px; border: 1px solid #655a3655; background: #222; }
+.poi-list button[aria-pressed="true"] { box-shadow: 0 0 12px #ffc90418; }
+@keyframes panel-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .poi-panel { animation: none; } .poi-panel button, .poi-panel select { transition: none; } .poi-panel button:not(:disabled):hover, .poi-panel button:not(:disabled):active { transform: none; } }
 .guide-preferences { border: 0; padding-top: 0; }
 
 @media (max-width: 639px) {

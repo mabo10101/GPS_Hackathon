@@ -14,5 +14,24 @@
 .guide-preferences label { display: block; margin-top: 10px; }
 .guide-preferences select { width: 100%; margin-top: 6px; padding: 8px; background: #111; color: #ffc904; border: 1px solid #8c783e; }
 .sprite-guide :focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.sprite-guide { animation: companion-enter .45s cubic-bezier(.2,.9,.3,1.2) both; }
+.guide-avatar img { animation: companion-hop .5s ease-out; }
+.guide-bubble { border-radius: 14px; box-shadow: 4px 4px #000, 0 0 22px #ffc90418; }
+.guide-nameplate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.guide-nameplate strong { font-size: 22px; }
+.guide-nameplate span { font-size: 10px; letter-spacing: 1px; color: #c4b88d; }
+.guide-dialogue { line-height: 1.5; min-height: 4.5em; margin-top: 10px; }
+.guide-dialogue-entry { animation: dialogue-enter .25s ease-out; }
+.guide-reveal { margin-top: 10px; padding: 4px 0; border: 0; background: transparent; color: #c4b88d; text-decoration: underline; font-size: 12px; cursor: pointer; }
+.guide-progress { display: block; width: 100%; height: 5px; margin-top: 16px; border: 0; background: #49402b; accent-color: #ffc904; }
+.guide-progress::-webkit-progress-bar { background: #49402b; border-radius: 8px; }
+.guide-progress::-webkit-progress-value { background: #ffc904; border-radius: 8px; transition: width .4s ease; }
+.guide-progress::-moz-progress-bar { background: #ffc904; }
+.guide-arrived .guide-bubble { border-color: #b9e98a; box-shadow: 4px 4px #000, 0 0 24px #b9e98330; }
+.guide-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@keyframes companion-enter { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes companion-hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-10px); } }
+@keyframes dialogue-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .sprite-guide, .guide-avatar img, .guide-dialogue-entry { animation: none; } .guide-progress::-webkit-progress-value { transition: none; } }
 @media (max-width: 639px) { .has-guide > .poi-panel { top: 72px; bottom: auto; max-height: 28dvh; } .sprite-guide { right: 10px; width: calc(100% - 20px); } .guide-bubble { max-height: 36dvh; padding: 12px; } }
 @media (min-width: 640px) and (max-width: 850px) { .sprite-guide { width: calc(100% - 356px); } }
