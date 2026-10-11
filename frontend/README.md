@@ -45,10 +45,25 @@ spaced 300 ms apart, in addition to their response time, to limit this client
 to fewer than five requests per second. Large catalogs may benefit from a
 matrix request or a candidate shortlist; no approximation is used here.
 
-The result shows a gold route, highlights the destination, and lists walking
-instructions, estimated time and distance. The blue point is your location at
-the time of the request. Indoor POIs can route to an entrance; floor navigation,
-live location tracking, automatic rerouting and voice guidance are not included.
+Choose a destination and click "Navigate with GPS", or use "Route to nearest".
+Both start live high-accuracy location tracking after calculating a walking route.
+The gold route shows walking instructions, estimated time and remaining distance;
+the blue point follows your device location. Accuracy in meters is shown in the
+panel: GPS precision depends on your device and signal and cannot be guaranteed.
+Routes refresh after movement of at least 15 meters (or the reported accuracy,
+whichever is larger), with at least ten seconds between requests. Each refresh
+uses one API request. Stop navigation or change category/destination to stop GPS
+tracking and cancel pending requests. Arrival is reported within 15 meters when
+location accuracy is 25 meters or better. Indoor POIs route to their entrance;
+floor navigation and voice guidance are not included.
+
+Click "Enable compass" on a phone to show a blue direction cone at your GPS
+location. Allow motion/orientation permission if prompted, then start navigation.
+Hold the phone flat with its screen facing up for the best estimate. The cone
+uses north-referenced compass readings, adjusts for screen and map rotation,
+and hides after five seconds without a valid reading. "Disable compass" removes
+sensor listeners. HTTPS is required on deployed phones; sensor support and
+accuracy vary by browser/device. Desktop browsers may provide no compass data.
 
 Geoapify attribution is displayed while a route is shown, alongside the existing
 map attribution. Routing implementation: `src/services/routing.ts`. Location

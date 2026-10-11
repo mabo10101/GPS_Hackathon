@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AttributionControl, LngLatBounds, type Map, type GeoJSONSource } from 'maplibre-gl';
 import type { FeatureCollection, Point } from 'geojson';
 import type { CampusPoi } from '../data/pois';
@@ -18,6 +18,7 @@ const SOURCE_LOCATION = 'campus-user-location';
 const LAYERS = ['campus-route-outline', 'campus-route-line', 'campus-poi-points', 'campus-location-point'];
 
 export default function MapOverlays({ map, pois, location, route }: MapOverlaysProps) {
+  const fittedDestination = useRef<string | null>(null);
   useEffect(() => {
     if (!map) return;
     const poiData: FeatureCollection<Point> = {
@@ -98,7 +99,9 @@ export default function MapOverlays({ map, pois, location, route }: MapOverlaysP
   }, [map, pois, location, route]);
 
   useEffect(() => {
-    if (!map || !route) return;
+    if (!route) { fittedDestination.current = null; return; }
+    if (!map || fittedDestination.current === route.poi.id) return;
+    fittedDestination.current = route.poi.id;
     const geometry = route.feature.geometry;
     const points = geometry.type === 'LineString' ? geometry.coordinates : geometry.coordinates.flat();
     const bounds = new LngLatBounds();

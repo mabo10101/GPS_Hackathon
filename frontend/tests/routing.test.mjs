@@ -15,6 +15,9 @@ function moduleUrl(path, imports = {}) {
 
 const dataUrl = moduleUrl('../src/data/pois.ts');
 const { validatePois } = await import(dataUrl);
+const { watchUserLocation, distanceMeters } = await import(moduleUrl('../src/services/location.ts'));
+const reactStub = 'data:text/javascript,export const useEffect=()=>{},useRef=()=>{},useState=()=>{};';
+const { compassHeading } = await import(moduleUrl('../src/services/compass.ts', { react: reactStub }));
 const { parseWalkingRoute, getWalkingRoute, findNearestWalkingRoute } = await import(
   moduleUrl('../src/services/routing.ts', { '../data/pois': dataUrl }),
 );
@@ -98,4 +101,47 @@ test('missing reachable routes report failure rather than drawing a straight lin
   mock.method(globalThis, 'fetch', async () => Response.json({ features: [] }));
   await assert.rejects(findNearestWalkingRoute(start, [poi('a', start)], 'test-key',
     new AbortController().signal, () => {}), /No walking routes/);
+});
+
+test('GPS watch uses fresh high-accuracy fixes and stops delivering locations after cancellation', () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  let success;
+  let options;
+  const cleared = [];
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { geolocation: {
+    watchPosition(callback, _error, settings) { success = callback; options = settings; return 42; },
+    clearWatch(id) { cleared.push(id); },
+  } } });
+  try {
+    const controller = new AbortController();
+    const locations = [];
+    watchUserLocation(controller.signal, (location) => locations.push(location), () => {});
+    assert.equal(options.enableHighAccuracy, true);
+    assert.equal(options.maximumAge, 0);
+    success({ coords: { longitude: -81.2, latitude: 28.6, accuracy: 8 } });
+    assert.deepEqual(locations, [{ coordinates: start, accuracy: 8 }]);
+    controller.abort();
+    success({ coords: { longitude: -81.3, latitude: 28.7, accuracy: 8 } });
+    assert.deepEqual(cleared, [42]);
+    assert.equal(locations.length, 1);
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'navigator', previous);
+    else delete globalThis.navigator;
+  }
+});
+
+test('movement thresholds use meters', () => {
+  assert.equal(distanceMeters(start, start), 0);
+  const distance = distanceMeters([0, 0], [0, 0.001]);
+  assert.ok(distance > 110 && distance < 112);
+});
+
+test('compass uses north-referenced readings and adjusts for screen orientation', () => {
+  assert.equal(compassHeading({ webkitCompassHeading: 90 }), 90);
+  assert.equal(compassHeading({ alpha: 90, absolute: true }), 270);
+  assert.equal(compassHeading({ alpha: 90, absolute: false }), null);
+  assert.equal(compassHeading({ alpha: null, absolute: true }), null);
+  assert.equal(compassHeading({ webkitCompassHeading: 350 }, 90), 80);
+  assert.equal(compassHeading({ webkitCompassHeading: 90, webkitCompassAccuracy: -1 }), null);
+  assert.equal(compassHeading({ webkitCompassHeading: Number.NaN }), null);
 });
