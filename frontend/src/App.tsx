@@ -3,6 +3,7 @@ import type { Map } from 'maplibre-gl';
 import MapView from './components/MapView';
 import MapOverlays from './components/MapOverlays';
 import PoiPanel from './components/PoiPanel';
+import IndoorApp from './indoor/IndoorApp';
 import { campusPois, validatePois, type PoiCategory } from './data/pois';
 import { getUserLocation, type UserLocation } from './services/location';
 import { findNearestWalkingRoute, type NearestRoute } from './services/routing';
@@ -17,6 +18,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [indoorOpen, setIndoorOpen] = useState(false);
   const pendingRequest = useRef<AbortController | null>(null);
   const { valid, errors } = useMemo(() => validatePois(campusPois), []);
   const filteredPois = useMemo(() => valid.filter((poi) => poi.category === category), [valid, category]);
@@ -83,7 +85,9 @@ export default function App() {
         location={location}
         hasApiKey={Boolean(API_KEY)}
         invalidCount={errors.length}
+        onOpenIndoor={() => setIndoorOpen(true)}
       />
+      {indoorOpen && <IndoorApp onClose={() => setIndoorOpen(false)} />}
     </main>
   );
 }

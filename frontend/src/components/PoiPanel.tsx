@@ -17,6 +17,7 @@ interface PoiPanelProps {
   location: UserLocation | null;
   hasApiKey: boolean;
   invalidCount: number;
+  onOpenIndoor: () => void;
 }
 
 export default function PoiPanel(props: PoiPanelProps) {
@@ -24,6 +25,7 @@ export default function PoiPanel(props: PoiPanelProps) {
   return (
     <section className="poi-panel" aria-label="Campus points of interest">
       <h1>Campus spots</h1>
+      <button className="secondary-button indoor-entry" onClick={props.onOpenIndoor}>Find a room inside</button>
       <label htmlFor="poi-category">Category</label>
       <select id="poi-category" value={props.category} onChange={(event) => props.onCategoryChange(event.target.value as PoiCategory)}>
         {POI_CATEGORIES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
@@ -44,6 +46,7 @@ export default function PoiPanel(props: PoiPanelProps) {
         {props.route.poi.building && <p>{props.route.poi.building}{props.route.poi.floor !== undefined ? ` · Floor ${props.route.poi.floor}` : ''}</p>}
         {props.route.poi.description && <p>{props.route.poi.description}</p>}
         {props.route.poi.entranceCoordinates && <p>Outdoor route to the building entrance. Continue inside to the destination.</p>}
+        {props.route.poi.indoorRoute && <button className="route-button" onClick={props.onOpenIndoor}>Continue inside</button>}
         {props.location && <p className="setup-note">Location accuracy: approximately {Math.round(props.location.accuracy)} m.</p>}
         {props.route.unreachableCount > 0 && <p>{props.route.unreachableCount} points had no walking route. Showing the nearest reachable result.</p>}
         {props.route.instructions.length > 0 && <details>
