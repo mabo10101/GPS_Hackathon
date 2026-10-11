@@ -19,6 +19,8 @@ export interface CampusPoi {
   building?: string;
   floor?: number;
   description?: string;
+  /** True when the indoor photo walkthrough covers the route from this POI's entrance. */
+  indoorRoute?: boolean;
 }
 
 // DEMO DATA: approximate UCF-area coordinates, not verified real POIs or entrances.
@@ -61,6 +63,18 @@ export const campusPois: CampusPoi[] = [
     building: 'Demo building',
     floor: 2,
     description: 'Tests an indoor POI with a separate outdoor entrance. Neither location is verified.',
+  },
+  {
+    id: 'eng-118',
+    name: 'ENG 118',
+    category: 'classroom',
+    // APPROXIMATE: verify Engineering 1 and its Business Entrance coordinates on site.
+    coordinates: [-81.1985, 28.6015],
+    entranceCoordinates: [-81.1981, 28.6015],
+    building: 'Engineering 1',
+    floor: 1,
+    description: 'Enter through the Business Entrance. Lenny guides you inside.',
+    indoorRoute: true,
   },
 ];
 

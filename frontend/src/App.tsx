@@ -4,6 +4,7 @@ import MapView from './components/MapView';
 import MapOverlays from './components/MapOverlays';
 import PoiPanel from './components/PoiPanel';
 import LocationHeading from './components/LocationHeading';
+import IndoorApp from './indoor/IndoorApp';
 import { useCompass } from './services/compass';
 import { campusPois, validatePois, type CampusPoi, type PoiCategory } from './data/pois';
 import { distanceMeters, getUserLocation, watchUserLocation, type UserLocation } from './services/location';
@@ -22,6 +23,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [destinationId, setDestinationId] = useState('');
   const [navigating, setNavigating] = useState(false);
+  const [indoorOpen, setIndoorOpen] = useState(false);
   const navigation = useRef<AbortController | null>(null);
   const pendingRequest = useRef<AbortController | null>(null);
   const { valid, errors } = useMemo(() => validatePois(campusPois), []);
@@ -142,7 +144,9 @@ export default function App() {
         location={location}
         hasApiKey={Boolean(API_KEY)}
         invalidCount={errors.length}
+        onOpenIndoor={() => setIndoorOpen(true)}
       />
+      {indoorOpen && <IndoorApp onClose={() => setIndoorOpen(false)} />}
     </main>
   );
 }

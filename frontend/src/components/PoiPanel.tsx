@@ -24,6 +24,7 @@ interface PoiPanelProps {
   location: UserLocation | null;
   hasApiKey: boolean;
   invalidCount: number;
+  onOpenIndoor: () => void;
 }
 
 export default function PoiPanel(props: PoiPanelProps) {
@@ -32,6 +33,7 @@ export default function PoiPanel(props: PoiPanelProps) {
   return (
     <section className="poi-panel" aria-label="Campus points of interest">
       <h1>Campus spots</h1>
+      <button className="secondary-button indoor-entry" onClick={props.onOpenIndoor}>Find a room inside</button>
       <button className="secondary-button" onClick={props.onToggleCompass}>{props.compassEnabled ? 'Disable compass' : 'Enable compass'}</button>
       {props.compassMessage && <p className="setup-note" role="status">{props.compassMessage}</p>}
       {props.compassEnabled && !props.location && <p className="setup-note">Start GPS navigation to show the direction cone at your location.</p>}
@@ -62,6 +64,7 @@ export default function PoiPanel(props: PoiPanelProps) {
         {props.route.poi.building && <p>{props.route.poi.building}{props.route.poi.floor !== undefined ? ` · Floor ${props.route.poi.floor}` : ''}</p>}
         {props.route.poi.description && <p>{props.route.poi.description}</p>}
         {props.route.poi.entranceCoordinates && <p>Outdoor route to the building entrance. Continue inside to the destination.</p>}
+        {props.route.poi.indoorRoute && <button className="route-button" onClick={props.onOpenIndoor}>Continue inside</button>}
         {props.location && <p className="setup-note">Location accuracy: approximately {Math.round(props.location.accuracy)} m.</p>}
         {props.route.unreachableCount > 0 && <p>{props.route.unreachableCount} points had no walking route. Showing the nearest reachable result.</p>}
         {props.route.instructions.length > 0 && <details>

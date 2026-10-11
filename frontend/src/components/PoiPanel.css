@@ -39,6 +39,7 @@
 .route-button { background: #ffc904; color: #111; }
 .secondary-button { background: #222; color: #ffc904; }
 .setup-note, .poi-count { color: #c4b88d; }
+.indoor-entry { margin: 0 0 14px; }
 .route-status:empty { display: none; }
 .route-error { color: #ffb4a8; }
 .route-result { margin-top: 16px; border-top: 1px solid #655a36; padding-top: 16px; }
