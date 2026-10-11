@@ -10,6 +10,9 @@ import step09 from '../assets/indoor/step09.jpg';
 import step10 from '../assets/indoor/step10.jpg';
 import step11 from '../assets/indoor/step11.jpg';
 import step12 from '../assets/indoor/step12.jpg';
+import entranceBusiness from '../assets/indoor/entrance-business.jpg';
+import entranceCourtyard from '../assets/indoor/entrance-courtyard.jpg';
+import entranceGarage from '../assets/indoor/entrance-garage.jpg';
 import lennySprite from '../assets/indoor/lenny.png';
 import knightroSprite from '../assets/indoor/knightro.png';
 import citronautSprite from '../assets/indoor/citronaut.png';
@@ -114,10 +117,10 @@ export interface Entrance {
 
 // Only the Business Entrance has a route. Other labels are placeholders.
 export const ENTRANCES: Entrance[] = [
-  { id: 'business', label: 'Business Entrance', shortLabel: 'Business', photo: step01, mapped: true },
+  { id: 'business', label: 'Business Entrance', shortLabel: 'Business', photo: entranceBusiness, mapped: true },
   { id: 'main', label: 'Main Entrance', shortLabel: 'Main', photo: step06, mapped: false },
-  { id: 'courtyard', label: 'Courtyard Doors', shortLabel: 'Courtyard', mapped: false },
-  { id: 'garage', label: 'Garage Side', shortLabel: 'Garage', mapped: false },
+  { id: 'courtyard', label: 'Courtyard Doors', shortLabel: 'Courtyard', photo: entranceCourtyard, mapped: false },
+  { id: 'garage', label: 'Garage Side', shortLabel: 'Garage', photo: entranceGarage, mapped: false },
 ];
 
 export type GuideId = 'lenny' | 'knightro' | 'citronaut';
@@ -216,6 +219,7 @@ export function matchesDestination(query: string): boolean {
 export const PRELOAD_IMAGES = [
   ...ROUTE_STEPS.map((step) => step.photo),
   ARRIVAL_PHOTO,
+  ...ENTRANCES.flatMap((entrance) => (entrance.photo ? [entrance.photo] : [])),
   FOREST_BACKGROUND,
   CANOPY_LAYER,
   ...GUIDES.map((guide) => guide.sprite),
