@@ -74,7 +74,7 @@ export default function IndoorApp({ onClose }: IndoorAppProps) {
   const guide = GUIDES.find((item) => item.id === guideId) ?? GUIDES.find((item) => item.id === 'lenny')!;
 
   return (
-    <div className="indoor" role="dialog" aria-modal="true" aria-label="Indoor navigation">
+    <main className="indoor" aria-label="Indoor navigation">
       {screen === 'welcome' && <WelcomeScreen
         onClose={onClose}
         onFound={() => setScreen(guideId ? 'entrance' : 'guide')}
@@ -106,7 +106,7 @@ export default function IndoorApp({ onClose }: IndoorAppProps) {
         onDone={onClose}
         onAnotherRoom={() => setScreen('welcome')}
       />}
-    </div>
+    </main>
   );
 }
 
@@ -165,7 +165,7 @@ function WelcomeScreen({ onClose, onFound }: { onClose: () => void; onFound: () 
   return (
     <section className="in-screen in-bg-full in-welcome">
       <TileField />
-      <BackButton onClick={onClose} label="Back to map" />
+      <BackButton onClick={onClose} label="Back to main menu" />
       <div className="in-welcome-hero">
         <span className="in-welcome-lenny-wrap">
           <img ref={spriteRef} className="in-sprite in-welcome-sprite" src={lenny.sprite} alt="" draggable={false} />

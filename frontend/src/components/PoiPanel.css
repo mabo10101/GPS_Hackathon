@@ -49,6 +49,15 @@
 .poi-list { list-style: none; padding: 0; margin: 14px 0 0; }
 .poi-list button { text-align: left; width: 100%; background: transparent; color: #e8dfbd; border: 0; border-top: 1px solid #35301d; padding: 10px 0; }
 .poi-list button:hover, .poi-list span { color: #ffc904; }
+.poi-list button[aria-pressed="true"] { background: #ffc90418; padding-left: 10px; border-left: 3px solid #ffc904; }
+.panel-eyebrow { color: #c4b88d; font-size: 12px; letter-spacing: 1.5px; }
+.quiet-button { display: block; padding: 8px 0; color: #c4b88d; background: transparent; border: 0; text-decoration: underline; }
+.panel-details { margin-top: 14px; padding-top: 12px; border-top: 1px solid #655a36; }
+.panel-details summary { color: #c4b88d; cursor: pointer; }
+.panel-details[open] summary { margin-bottom: 12px; }
+.route-result { margin-top: 0; padding-top: 0; border-top: 0; }
+.route-summary { color: #ffc904; font-size: 19px; }
+.guide-preferences { border: 0; padding-top: 0; }
 
 @media (max-width: 639px) {
   .poi-panel {

@@ -85,7 +85,7 @@ export default function MapOverlays({ map, pois, location, route }: MapOverlaysP
       compact: true,
       customAttribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a>',
     }) : null;
-    if (attribution) map.addControl(attribution, 'bottom-right');
+    if (attribution) map.addControl(attribution, 'bottom-left');
 
     return () => {
       map.off('style.load', onStyleLoad);

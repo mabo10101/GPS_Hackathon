@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { Map, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import { AttributionControl, Map, NavigationControl, setWorkerUrl } from 'maplibre-gl';
 import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { createUcfRetroStyle } from '../map/ucfRetroTheme';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -40,8 +40,10 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       container,
       center: UCF_CENTER,
       zoom: 15,
+      attributionControl: false,
     });
     mapRef.current = map;
+    map.addControl(new AttributionControl({ compact: true }), 'bottom-left');
     map.setStyle(MAP_STYLE, {
       transformStyle: (_previousStyle, nextStyle) => createUcfRetroStyle(nextStyle),
     });

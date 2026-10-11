@@ -21,6 +21,13 @@ On Windows PowerShell, use `npm.cmd` if execution policy blocks `npm.ps1`.
 
 ## Custom POIs and walking routes
 
+The app starts at a main menu over the campus map. "Explore campus" opens the
+GPS navigation page (`#/map`); "Find a room" opens the separate indoor navigation
+page (`#/indoor`). Each flow returns to the main menu, and browser Back/Forward
+works between pages. Leaving campus navigation stops GPS requests and compass
+listeners. Indoor navigation loads on demand and no longer overlays a live map.
+Page components live in `src/pages`; `App.tsx` handles page selection.
+
 Add your locations to `src/data/pois.ts`; `src/data/README.md` documents the
 record format, categories, coordinate order and optional entrance location.
 The list includes clearly labeled, unverified demo points for testing. Replace
