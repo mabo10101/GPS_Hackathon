@@ -1,0 +1,6 @@
+.brand-logo { display: block; width: 72px; height: 72px; flex: 0 0 auto; object-fit: cover; border-radius: 16px; border: 2px solid #8c783e; box-shadow: 3px 3px 0 #0005; image-rendering: pixelated; }
+.brand-logo-small { width: 36px; height: 36px; border-radius: 9px; }
+.menu-brand { display: flex; align-items: center; gap: 18px; margin-bottom: 12px; }
+.panel-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.panel-brand .panel-eyebrow { margin: 0; }
+@media (max-width: 380px) { .menu-brand { gap: 12px; } .menu-brand .brand-logo { width: 56px; height: 56px; border-radius: 12px; } }

@@ -2,6 +2,7 @@ import { POI_CATEGORIES, type CampusPoi, type PoiCategory } from '../data/pois';
 import type { NearestRoute } from '../services/routing';
 import type { UserLocation } from '../services/location';
 import './PoiPanel.css';
+import BrandLogo from './BrandLogo';
 
 interface PoiPanelProps {
   compassEnabled: boolean;
@@ -33,7 +34,7 @@ export default function PoiPanel(props: PoiPanelProps) {
   const destination = props.pois.find((poi) => poi.id === props.destinationId);
   const choosing = !props.route && !props.busy;
   return <section className="poi-panel" aria-label="Campus navigation">
-    <p className="panel-eyebrow">{props.arrived ? 'YOU MADE IT' : props.route ? 'ON YOUR WAY' : 'EXPLORE CAMPUS'}</p>
+    <div className="panel-brand"><BrandLogo small /><p className="panel-eyebrow">{props.arrived ? 'YOU MADE IT' : props.route ? 'ON YOUR WAY' : 'EXPLORE CAMPUS'}</p></div>
     <h1>{props.route ? props.route.poi.name : 'Where are we going?'}</h1>
     {choosing && <>
       <label htmlFor="poi-category">What are you looking for?</label>
@@ -41,6 +42,10 @@ export default function PoiPanel(props: PoiPanelProps) {
         {POI_CATEGORIES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
       </select>
       <p className="setup-note">Find the nearest spot, or choose one below.</p>
+      <button className="route-button" onClick={destination ? props.onNavigate : props.onRouteNearest} disabled={!props.hasRouting || props.pois.length === 0}>
+        {destination ? 'Start walking' : 'Take me to the nearest'}
+      </button>
+      {destination && <button className="quiet-button" onClick={() => props.onDestinationChange('')}>Use nearest instead</button>}
       <ul className="poi-list" aria-label={categoryName}>
         {props.pois.map((poi) => <li key={poi.id}>
           <button onClick={() => props.onFocusPoi(poi)} aria-pressed={poi.id === props.destinationId}>
@@ -49,10 +54,6 @@ export default function PoiPanel(props: PoiPanelProps) {
         </li>)}
       </ul>
       {props.pois.length === 0 && <p>No destinations in this category yet.</p>}
-      <button className="route-button" onClick={destination ? props.onNavigate : props.onRouteNearest} disabled={!props.hasRouting || props.pois.length === 0}>
-        {destination ? 'Start walking' : 'Take me to the nearest'}
-      </button>
-      {destination && <button className="quiet-button" onClick={() => props.onDestinationChange('')}>Use nearest instead</button>}
     </>}
     {props.busy && <button className="secondary-button" onClick={props.onClearRoute}>Cancel</button>}
     <p className="route-status" role="status" aria-live="polite">{props.status}</p>

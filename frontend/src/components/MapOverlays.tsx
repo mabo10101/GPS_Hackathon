@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { AttributionControl, LngLatBounds, type Map, type GeoJSONSource } from 'maplibre-gl';
+import { AttributionControl, LngLatBounds, Marker, type Map, type GeoJSONSource } from 'maplibre-gl';
 import type { FeatureCollection, Point } from 'geojson';
 import type { CampusPoi } from '../data/pois';
 import type { UserLocation } from '../services/location';
 import type { NearestRoute } from '../services/routing';
+import bishopPin from '../assets/W_Bishop.png';
+import './MapOverlays.css';
 
 interface MapOverlaysProps {
   map: Map | null;
@@ -12,24 +14,30 @@ interface MapOverlaysProps {
   route: NearestRoute | null;
 }
 
-const SOURCE_POIS = 'campus-custom-pois';
 const SOURCE_ROUTE = 'campus-walking-route';
 const SOURCE_LOCATION = 'campus-user-location';
-const LAYERS = ['campus-route-outline', 'campus-route-line', 'campus-poi-points', 'campus-location-point'];
+const LAYERS = ['campus-route-outline', 'campus-route-line', 'campus-location-point', 'campus-route-glow'];
 
 export default function MapOverlays({ map, pois, location, route }: MapOverlaysProps) {
   const fittedDestination = useRef<string | null>(null);
   useEffect(() => {
     if (!map) return;
-    const poiData: FeatureCollection<Point> = {
-      type: 'FeatureCollection',
-      features: pois.map((poi) => ({
-        type: 'Feature',
-        id: poi.id,
-        geometry: { type: 'Point', coordinates: poi.coordinates },
-        properties: { id: poi.id, name: poi.name, nearest: poi.id === route?.poi.id },
-      })),
-    };
+    const markers = pois.map((poi) => {
+      const element = document.createElement('div');
+      const destination = poi.id === route?.poi.id;
+      element.className = `campus-poi-pin${destination ? ' campus-poi-pin-destination' : ''}`;
+      element.title = `${poi.name}${destination ? ' · Destination' : ''}`;
+      const icon = document.createElement('img');
+      icon.src = bishopPin;
+      icon.alt = element.title;
+      icon.draggable = false;
+      element.append(icon);
+      return new Marker({ element, anchor: 'bottom' }).setLngLat(poi.coordinates).addTo(map);
+    });
+    return () => { for (const marker of markers) marker.remove(); };
+  }, [map, pois, route?.poi.id]);
+  useEffect(() => {
+    if (!map) return;
     const locationData: FeatureCollection<Point> = {
       type: 'FeatureCollection',
       features: location ? [{
@@ -43,12 +51,15 @@ export default function MapOverlays({ map, pois, location, route }: MapOverlaysP
     const sync = () => {
       if (synced) return;
       synced = true;
-      if (!map.getSource(SOURCE_POIS)) map.addSource(SOURCE_POIS, { type: 'geojson', data: poiData });
-      else (map.getSource(SOURCE_POIS) as GeoJSONSource).setData(poiData);
       if (!map.getSource(SOURCE_LOCATION)) map.addSource(SOURCE_LOCATION, { type: 'geojson', data: locationData });
       else (map.getSource(SOURCE_LOCATION) as GeoJSONSource).setData(locationData);
       if (route && !map.getSource(SOURCE_ROUTE)) {
         map.addSource(SOURCE_ROUTE, { type: 'geojson', data: route.feature });
+        map.addLayer({
+          id: LAYERS[3], type: 'line', source: SOURCE_ROUTE,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': '#ffc904', 'line-width': 18, 'line-blur': 7, 'line-opacity': 0.35 },
+        });
         map.addLayer({
           id: LAYERS[0], type: 'line', source: SOURCE_ROUTE,
           layout: { 'line-join': 'round', 'line-cap': 'round' },
@@ -60,17 +71,8 @@ export default function MapOverlays({ map, pois, location, route }: MapOverlaysP
           paint: { 'line-color': '#ffc904', 'line-width': 5 },
         });
       }
-      if (!map.getLayer(LAYERS[2])) map.addLayer({ // POI highlight
-        id: LAYERS[2], type: 'circle', source: SOURCE_POIS,
-        paint: {
-          'circle-radius': ['case', ['get', 'nearest'], 11, 7],
-          'circle-color': '#ffffff',
-          'circle-stroke-color': ['case', ['get', 'nearest'], '#ffffff', '#111111'],
-          'circle-stroke-width': 3,
-        },
-      });
-      if (!map.getLayer(LAYERS[3])) map.addLayer({
-        id: LAYERS[3], type: 'circle', source: SOURCE_LOCATION,
+      if (!map.getLayer(LAYERS[2])) map.addLayer({
+        id: LAYERS[2], type: 'circle', source: SOURCE_LOCATION,
         paint: { 'circle-radius': 7, 'circle-color': '#68c8ff', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 },
       });
     };
@@ -94,9 +96,9 @@ export default function MapOverlays({ map, pois, location, route }: MapOverlaysP
       if (!map.getStyle()) return;
       if (attribution && map.hasControl(attribution)) map.removeControl(attribution);
       for (const id of [...LAYERS].reverse()) if (map.getLayer(id)) map.removeLayer(id);
-      for (const id of [SOURCE_POIS, SOURCE_ROUTE, SOURCE_LOCATION]) if (map.getSource(id)) map.removeSource(id);
+      for (const id of [SOURCE_ROUTE, SOURCE_LOCATION]) if (map.getSource(id)) map.removeSource(id);
     };
-  }, [map, pois, location, route]);
+  }, [map, location, route]);
 
   useEffect(() => {
     if (!route) { fittedDestination.current = null; return; }

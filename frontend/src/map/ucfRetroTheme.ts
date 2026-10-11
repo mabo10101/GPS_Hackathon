@@ -111,7 +111,7 @@ function themeLayer(layer: LayerSpecification): LayerSpecification {
         },
         paint: {
           ...paint,
-          'text-color': colors.gold,
+          'text-color': '#cbaf4c',
           'text-halo-color': colors.background,
           'text-halo-width': 1,
           'text-halo-blur': 0,
